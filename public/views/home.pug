@@ -1,0 +1,132 @@
+extends layout.pug
+include mixins/toplist.pug
+include mixins/log.pug
+
+block extrameta
+  link(
+    rel='stylesheet',
+    href='https://unpkg.com/leaflet@1.7.1/dist/leaflet.css',
+    integrity='sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==',
+    crossorigin='')
+  script(
+    src='https://unpkg.com/leaflet@1.7.1/dist/leaflet.js',
+    integrity='sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==',
+    crossorigin='')
+  link(
+    rel='stylesheet',
+    href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css')
+  script(
+    src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js')
+
+block content
+  .header
+    .background
+      img.logo(src='/images/logo.svg', alt='Norrlandsordern logga')
+    .banner
+  .signin.p-4.pb-5.text-center
+    .restrict-width
+      if user
+        h6.white.text-muted Inloggad som
+        h3.white= user.name
+        a(href='/me')
+          button.btn.btn-light.btn-lg.btn-block.mb-2 Logga öl!
+        a(href='/logout')
+          button.btn.btn-outline-light.btn-sm.btn-block Logga ut
+      else
+        a.mb-1(href='/login')
+          button.btn.btn-light.btn-lg.btn-block.mb-2 Logga in
+        a(href='/signup')
+          button.btn.btn-outline-secondary.btn-sm.btn-block Bli medlem
+  .status.p-4
+    .restrict-width
+      p.subheader Status
+      h4.red Hur långt har vi kommit?
+      p
+        | Sedan Norrlandsordern grundades den 13 september 2020 så har
+        em=` ${userCount} medlemmar `
+        | loggat öl från nere i söder till uppe i norr! Senaste ölen loggades för
+        em=` ${formatDateDiff(latestNorrlands[0].created_at, new Date())} `
+        | sedan och hittills har det loggats
+        em=` ${formatNumber(volume/33, 0)} burkar`
+        | , vilket motsvarar:
+      .text-center.mb-3
+        h1= formatNumber(volume/33*0.066, 2)
+        p meter
+        if user
+          a(href='/statistics')
+            button.btn.btn-outline-dark.btn.btn-block Se mer statistik
+
+      #map-status.mb-4
+      if user
+        #latest
+          p.subheader Dumheter
+          h4.red Senaste loggade ölen
+          +log(latestNorrlands)
+          h4.red Veckans Topplista
+          +toplist(weeklyToplist)
+          h4.red Topplista
+          +toplist(allTimeToplist)
+  .vision.p-4
+    .restrict-width
+      p.subheader.blue Vision
+      h4.red Varför Norrlandsordern?
+      p.blue.
+        Många studenter har genom åren blivit beresta bland urvalet av fulöl som finns
+        tillgänglig att införskaffa från landet söderut som gjort öldrickandet till en
+        sport. Fulölet har varit en katalysator för studenters engagemang och socialisering
+        och har skapat oräknerligt antal relationer som kommer vara för evigt. Norrlandsordern
+        är en hyllning till en av dessa fulöl - Norrlands Guld. Den hyllas genom en rörelse
+        som annamar studentandan med allt från sångböcker till storslagna mål och siktar
+        mot stjärnorna uppe i norr. Vi ska dricka oss till Norrland!
+  .approach.p-4
+    .restrict-width
+      p.subheader.white Angrepssätt
+      h4.red Hur bidrar man?
+      p.white.
+        Målet är att dricka så många Norrlands guld att hade man ställt dem upp bredvid varandra
+        kommer man från E-huset, Lund till nedersta gränsen av Norrland. Avståndet är 540 811,52 meter,
+        vilket motsvarar 8 194 114 burkar. Det är lätt att bli avskräckt av ett så stort tal men kom
+        alltid ihåg att studenter har en förmåga att klara av de mest otroliga sakerna och vi kommer
+        komma ut som vinnare även här. Mot Norrland, en burk i taget!
+      hr
+      p.white= "Skapad av Emil och Niklas, version " + version
+  if showWrapped
+    .norrlands-wrapped-popup
+      button.close
+        i.bi.bi-x
+      p.subheader #norrlandswrapped
+      h4 Titta tillbaka på 2021!
+      p.
+        När årets slut närmar sig kan det vara kul att reflektera över det gångna året, här
+        är din #norrlandswrapped2021!
+      a(href='/wrapped/2021')
+        button.goto.btn.btn-light.btn-lg.btn-block.mb-2 SE DIN WRAPPED 2021
+
+block scripts
+  script(type='text/javascript').
+    const popup = document.getElementsByClassName('norrlands-wrapped-popup')[0]
+    if (popup)
+      popup.getElementsByClassName('close')[0].onclick = function() {
+        popup.style.display = 'none';
+      }
+  script(type='text/javascript').
+    const map = L.map('map-status', {
+      fullscreenControl: true
+    }).setView([#{lat}, #{lon}], 14);
+    L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+    L.polyline([[#{lat}, #{lon}], [60.201391, 16.739080]], {
+      color: '#BE162F',
+      dashArray: '10, 10'
+    }).addTo(map);
+    L.polyline([[55.710783, 13.210120], [#{lat}, #{lon}]], {
+      color: '#0A243E'
+    }).addTo(map);
+    L.marker([#{lat}, #{lon}], {
+      icon: L.icon({
+        iconUrl: '/images/marker.svg',
+        iconSize: [82, 54],
+        iconAnchor: [41, 54]
+      }),
+    }).addTo(map);
