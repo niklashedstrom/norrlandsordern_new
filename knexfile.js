@@ -5,7 +5,7 @@ module.exports = {
   development: {
     client: 'pg',
     connection: {
-      host: "0.0.0.0",
+      host: "localhost",
       user: "postgres",
       password: "password",
       database: "norrlandsordern",
