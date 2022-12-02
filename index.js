@@ -447,6 +447,8 @@ app.get('/wrapped/2021', auth.autenticated, wrapped.w2021)
 
 const port = process.env.PORT || 5000
 
-const server = app.listen(port, () => {
+const host = process.env.HOST || "0.0.0.0"
+
+const server = app.listen(port, host, () => {
   console.log(`Example app listening at http://localhost:${port}`)
 })
